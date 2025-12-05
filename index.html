@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video a GIF desde arriba</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      /* 🔑 Fondo degradado */
+      background: linear-gradient(
+        to bottom,
+        #862828 0%,
+        #862828 80%,
+        #e2bd9e 100%
+      );
+    }
+
+    .media {
+      position: absolute;
+      top: 0;          /* 🔑 inicia desde arriba */
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;   /* muestra todo el contenido sin recortar */
+      object-position: top center; /* 🔑 alinea arriba */
+      display: block;
+      background: transparent;
+    }
+
+    .gif {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0s;
+    }
+    .gif.visible {
+      opacity: 1;
+    }
+
+    video::-webkit-media-controls {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Video -->
+    <video
+      id="introVideo"
+      class="media"
+      src="inicio.mp4"
+      autoplay
+      muted
+      playsinline
+      preload="auto"
+    ></video>
+
+    <!-- GIF final -->
+    <img
+      id="finalGif"
+      class="media gif"
+      src="rubemotos-final.gif"
+      alt="Final"
+      loading="eager"
+      decoding="async"
+    />
+  </div>
+
+  <script>
+    (function () {
+      const video = document.getElementById('introVideo');
+      const gif = document.getElementById('finalGif');
+
+      let gifReady = gif.complete;
+      if (!gifReady) {
+        gif.addEventListener('load', () => { gifReady = true; });
+      }
+
+      const tryPlay = () => {
+        const p = video.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(() => {
+            const resume = () => {
+              video.play().finally(() => {
+                window.removeEventListener('touchstart', resume);
+                window.removeEventListener('click', resume);
+              });
+            };
+            window.addEventListener('touchstart', resume, { once: true });
+            window.addEventListener('click', resume, { once: true });
+          });
+        }
+      };
+      tryPlay();
+
+      video.addEventListener('ended', () => {
+        video.style.visibility = 'hidden';
+        if (gifReady) {
+          gif.classList.add('visible');
+        } else {
+          gif.addEventListener('load', () => gif.classList.add('visible'));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
